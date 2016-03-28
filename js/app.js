@@ -13,8 +13,8 @@ var Enemy = function(dy, speed) {
     // path to sprite
     this.sprite = 'images/enemy-bug.png';
     
-    // speed between 0 and 1; multiplied by 200
-    this.speed = speed * 200;
+    // speed between 0 and 1; multiplied by 180
+    this.speed = speed * 170;
 };
 
 // Parameter: dt, a time delta between ticks
@@ -37,14 +37,44 @@ Enemy.prototype.render = function() {
 // a handleInput() method.
 
 var Player = function () {
+    // path to sprite
     this.sprite = "images/char-cat-girl.png";
+    
+    // start X coord for sprite
+    this.startX = 200;
+    // last X coord for sprite
+    this.startY = 65 + (4 * 80);
+
+    
+    // sprite coords
+    this.x = this.startX;
+    // 65px offset plus offset for lane (dy; zero-based)
+    this.y = this.startY;
 };
 
-Player.prototype.update = function () {};
+Player.prototype.update = function () {
+    // empty
+};
 
-Player.prototype.render = function () {};
+Player.prototype.render = function () {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
 
-Player.prototype.handleInput = function () {};
+Player.prototype.handleInput = function (key) {
+    switch(key) {
+        case "left":
+            this.x += -100;
+            break;
+        case "up":
+            this.y += -80;
+            break;
+        case "right":
+            this.x += 100;
+            break;
+        case "down":
+            this.y += 80;
+    }
+};
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
@@ -52,7 +82,7 @@ Player.prototype.handleInput = function () {};
 
 var player = new Player();
 
-var allEnemies = [ new Enemy(0, 0.5), new Enemy(1, 1), new Enemy(2, 0.3), new Enemy(0, 0.8) ];
+var allEnemies = [ new Enemy(0, 0.5), new Enemy(1, 1), new Enemy(2, 0.25), new Enemy(0, 0.75) ];
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
