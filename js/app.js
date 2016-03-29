@@ -1,117 +1,177 @@
-// Enemies our player must avoid
-var Enemy = function(dy, speed) {
-    // first X coord for sprite
-    this.startX = -100;
-    // last X coord for sprite
-    this.endX = 500;
-
-    // sprite coords
-    this.x = this.startX;
-    // 65px offset plus offset for lane (dy; zero-based)
-    this.y = 65 + (dy * 80);
-
-    // path to sprite
+/**
+ * Create a new Enemy.
+ * @constructor
+ * @this {Enemy}
+ * @param {integer}     lane                - Number of lane index (zero-based).
+ * @param {float}       speed               - Speed of animation.
+ * @property {string}   sprite              - Path to sprite.
+ * @property {objects}  boundaries          - Boundaries of animation.
+ * @property {integer}  boundaries.left     - Left boundary of animation.
+ * @property {integer}  boundaries.right    - Right boundary of animation.
+ * @property {integer}  width               - Width of sprite.
+ * @property {integer}  speed               - Speed of animation.
+ * @property {integer}  lane                - Number of lane index (zero-based).
+ * @member {integer}    x                   - Horizontal coordinate
+ * @member {integer}    y                   - Vertical coordinate
+ */
+var Enemy = function(lane, speed) {
     this.sprite = 'images/enemy-bug.png';
+    this.width = 100;
+    this.lane = lane || 0;
+    this.speed = (speed || 1) * 170;
+    this.boundaries = {
+        left: -100,
+        right: 500
+    };
 
-    // speed between 0 and 1; multiplied by 180
-    this.speed = speed * 170;
+    this.x = this.boundaries.left;
+    this.y = 60 + (lane * 83);
 };
 
-// Parameter: dt, a time delta between ticks
+/**
+ * Callback that is executed in each loop. Update object's x position.
+ * @function
+ * @this {Enemy}
+ * @param {float} dt - time delta between ticks
+ */
 Enemy.prototype.update = function(dt) {
     this.x += (this.speed * dt);
 
-    // reset X coord if sprite reaches end of screen
-    if (this.x > this.endX) {
-        this.x = this.startX;
+    if (this.x > this.boundaries.right) {
+        this.reset();
     }
 };
 
-// Draw the enemy on the screen, required method for game
+/**
+ * Reset object to original coordinates.
+ * @function
+ * @this {Enemy}
+ */
+Enemy.prototype.reset = function() {
+    this.x = this.boundaries.left;
+};
+
+
+/**
+ * Callback that is executed in each loop. Draw object's sprite.
+ * @function
+ * @this {Enemy}
+ */
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+/**
+ * Create a new Player.
+ * @constructor
+ * @this {Player}
+ * @property {string}   sprite              - Path to sprite.
+ * @property {integer}  lane                - Number of lane index (zero-based).
+ * @property {objects}  boundaries          - Boundaries of sprite.
+ * @property {integer}  boundaries.left     - Left boundary of sprite.
+ * @property {integer}  boundaries.top      - Top boundary of sprite.
+ * @property {integer}  boundaries.right    - Right boundary of sprite.
+ * @property {integer}  boundaries.bottom   - Bottom boundary of sprite.
+ * @property {objects}  step                - Offsets of steps
+ * @property {integer}  step.x              - Offset for step in x direction.
+ * @property {integer}  step.y              - Offset for step in y direction.
+ * @property {objects}  start               - Start position of sprite.
+ * @property {integer}  start.x             - X coordinate of start position.
+ * @property {integer}  start.y             - Y coordinate of start position.
+ * @member {integer}    x                   - Horizontal coordinate
+ * @member {integer}    y                   - Vertical coordinate
+ */
 var Player = function() {
-    // path to sprite
     this.sprite = "images/char-cat-girl.png";
-
-    // offset for steps in X and Y direction
-    this.step = {
-        x: 100,
-        y: 83
-    };
-    
-    // boundaries
+    this.lane = 4;
     this.boundaries = {
         left: 0,
         top: 73,
         right: 400,
         bottom: 405
     };
-    
-    // start coords for sprite
+    this.step = {
+        x: 100,
+        y: 83
+    };
     this.start = {
         x: 200,
-        y: this.boundaries.top + (4 * this.step.y)
+        y: this.boundaries.top + (this.lane * this.step.y)
     };
-    
+
     this.x = this.start.x;
     this.y = this.start.y;
 };
 
-Player.prototype.update = function() {
-    // empty
+/**
+ * Callback that is executed in each loop. Update position.
+ * @function
+ * @this {Player}
+ * @property {integer} dx - Delta of x coordinate.
+ * @property {integer} dy - Delta of y coordinate.
+ */
+Player.prototype.update = function(dx, dy) {
+    dx = dx || 0;
+    dy = dy || 0;
+    
+    this.x += dx;
+    this.y += dy;
 };
 
+/**
+ * Callback that is executed in each loop. Draw object's sprite.
+ * @function
+ * @this {Player}
+ */
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+/**
+ * Handle keyboard input and triggers update() to change position of instance.
+ * @function
+ * @this {Player}
+ * @param {string} key - Label of key pressed.
+ */
 Player.prototype.handleInput = function(key) {
     switch (key) {
         case "left":
             if (this.x > this.boundaries.left) {
-                this.x -= this.step.x;
+                this.update(-this.step.x, 0);
             }
 
             break;
         case "up":
             if (this.y > this.boundaries.top) {
-                this.y -= this.step.y;
-            } else {
-                // TODO: reset method
-                this.x = this.start.x;
-                this.y = this.start.y;
+                this.lane--;
+                this.update(0, -this.step.y);
+            }
+            else {
+                this.reset();
             }
 
             break;
         case "right":
             if (this.x < this.boundaries.right) {
-                this.x += this.step.x;
+                this.update(this.step.x, 0);
             }
 
             break;
         case "down":
             if (this.y < this.boundaries.bottom) {
-                this.y += this.step.y;
+                this.lane++;
+                this.update(0, this.step.y);
             }
     }
 };
 
-var player = new Player();
-
-var allEnemies = [new Enemy(0, 0.5), new Enemy(1, 1), new Enemy(2, 0.25), new Enemy(0, 0.75)];
-
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
-document.addEventListener('keyup', function(e) {
-    var allowedKeys = {
-        37: 'left',
-        38: 'up',
-        39: 'right',
-        40: 'down'
-    };
-
-    player.handleInput(allowedKeys[e.keyCode]);
-});
+/**
+ * Reset object to original coordinates.
+ * @function
+ * @this {Player}
+ */
+Player.prototype.reset = function() {
+    this.x = this.start.x;
+    this.y = this.start.y;
+    this.lane = 4;
+};

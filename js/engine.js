@@ -19,11 +19,27 @@ var Engine = (function(global) {
      * create the canvas element, grab the 2D context for that canvas
      * set the canvas elements height/width and add it to the DOM.
      */
-    var doc = global.document,
-        win = global.window,
-        canvas = doc.createElement('canvas'),
-        ctx = canvas.getContext('2d'),
-        lastTime;
+    var doc = global.document;
+    var win = global.window;
+    var canvas = doc.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    var lastTime = 0;
+
+    var player = new Player();
+    var allEnemies = [new Enemy(0, 0.66), new Enemy(1, 1), new Enemy(2, 0.4), new Enemy(0, 0.82)];
+
+    // This listens for key presses and sends the keys to your
+    // Player.handleInput() method. You don't need to modify this.
+    document.addEventListener('keyup', function(e) {
+        var allowedKeys = {
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down'
+        };
+
+        player.handleInput(allowedKeys[e.keyCode]);
+    });
 
     canvas.width = 505;
     canvas.height = 606;
@@ -69,18 +85,29 @@ var Engine = (function(global) {
         main();
     }
 
-    /* This function is called by main (our game loop) and itself calls all
-     * of the functions which may need to update entity's data. Based on how
-     * you implement your collision detection (when two entities occupy the
-     * same space, for instance when your character should die), you may find
-     * the need to add an additional function call here. For now, we've left
-     * it commented out - you may or may not want to implement this
-     * functionality this way (you could just implement collision detection
-     * on the entities themselves within your app.js file).
+    /* This function is called by the game loop.
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
+    }
+
+    function checkCollisions() {
+        // sprites are not properly clipped; have some transparent margins
+        var playerLeft = player.x + 16;
+        var playerRight = player.x + 84;
+
+        allEnemies.forEach(function(enemy) {
+            var enemyLeft = enemy.x;
+            var enemyRight = enemy.x + enemy.width;
+
+            if (player.lane === enemy.lane) {
+                if ((playerLeft >= enemyLeft && playerLeft <= enemyRight) ||
+                    (playerRight <= enemyRight && playerRight >= enemyLeft)) {
+                    player.reset();
+                }
+            }
+        });
     }
 
     /* This is called by the update function and loops through all of the
@@ -94,7 +121,6 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
-        player.update();
     }
 
     /* This function initially draws the "game level", it will then call
@@ -108,12 +134,12 @@ var Engine = (function(global) {
          * for that particular row of the game level.
          */
         var rowImages = [
-                'images/water-block.png',   // Top row is water
-                'images/stone-block.png',   // Row 1 of 3 of stone
-                'images/stone-block.png',   // Row 2 of 3 of stone
-                'images/stone-block.png',   // Row 3 of 3 of stone
-                'images/grass-block.png',   // Row 1 of 2 of grass
-                'images/grass-block.png'    // Row 2 of 2 of grass
+                'images/water-block.png', // Top row is water
+                'images/stone-block.png', // Row 1 of 3 of stone
+                'images/stone-block.png', // Row 2 of 3 of stone
+                'images/stone-block.png', // Row 3 of 3 of stone
+                'images/grass-block.png', // Row 1 of 2 of grass
+                'images/grass-block.png' // Row 2 of 2 of grass
             ],
             numRows = 6,
             numCols = 5,
