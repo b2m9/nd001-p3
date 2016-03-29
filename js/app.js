@@ -9,10 +9,10 @@ var Enemy = function(dy, speed) {
     this.x = this.startX;
     // 65px offset plus offset for lane (dy; zero-based)
     this.y = 65 + (dy * 80);
-    
+
     // path to sprite
     this.sprite = 'images/enemy-bug.png';
-    
+
     // speed between 0 and 1; multiplied by 180
     this.speed = speed * 170;
 };
@@ -20,7 +20,7 @@ var Enemy = function(dy, speed) {
 // Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
     this.x += (this.speed * dt);
-    
+
     // reset X coord if sprite reaches end of screen
     if (this.x > this.endX) {
         this.x = this.startX;
@@ -32,57 +32,76 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-
-var Player = function () {
+var Player = function() {
     // path to sprite
     this.sprite = "images/char-cat-girl.png";
-    
-    // start X coord for sprite
-    this.startX = 200;
-    // last X coord for sprite
-    this.startY = 65 + (4 * 80);
 
+    // offset for steps in X and Y direction
+    this.step = {
+        x: 100,
+        y: 83
+    };
     
-    // sprite coords
-    this.x = this.startX;
-    // 65px offset plus offset for lane (dy; zero-based)
-    this.y = this.startY;
+    // boundaries
+    this.boundaries = {
+        left: 0,
+        top: 73,
+        right: 400,
+        bottom: 405
+    };
+    
+    // start coords for sprite
+    this.start = {
+        x: 200,
+        y: this.boundaries.top + (4 * this.step.y)
+    };
+    
+    this.x = this.start.x;
+    this.y = this.start.y;
 };
 
-Player.prototype.update = function () {
+Player.prototype.update = function() {
     // empty
 };
 
-Player.prototype.render = function () {
+Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-Player.prototype.handleInput = function (key) {
-    switch(key) {
+Player.prototype.handleInput = function(key) {
+    switch (key) {
         case "left":
-            this.x += -100;
+            if (this.x > this.boundaries.left) {
+                this.x -= this.step.x;
+            }
+
             break;
         case "up":
-            this.y += -80;
+            if (this.y > this.boundaries.top) {
+                this.y -= this.step.y;
+            } else {
+                // TODO: reset method
+                this.x = this.start.x;
+                this.y = this.start.y;
+            }
+
             break;
         case "right":
-            this.x += 100;
+            if (this.x < this.boundaries.right) {
+                this.x += this.step.x;
+            }
+
             break;
         case "down":
-            this.y += 80;
+            if (this.y < this.boundaries.bottom) {
+                this.y += this.step.y;
+            }
     }
 };
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-
 var player = new Player();
 
-var allEnemies = [ new Enemy(0, 0.5), new Enemy(1, 1), new Enemy(2, 0.25), new Enemy(0, 0.75) ];
+var allEnemies = [new Enemy(0, 0.5), new Enemy(1, 1), new Enemy(2, 0.25), new Enemy(0, 0.75)];
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
